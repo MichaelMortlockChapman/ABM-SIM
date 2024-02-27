@@ -6,22 +6,31 @@ import StartSim from "./sim/Main.js";
 import OrderBook from "./sim/OrderBook.js";
 import { LineChart } from "@mui/x-charts";
 
-function createChart(displayData) {
-  return <LineChart
-    xAxis={[{ data: displayData[0] }]}
-    series={[
-      {
-        data: displayData[1],
-        showMark: false,
-      },
-    ]}
-    width={500}
-    height={300}
-  />
+function createChart(displayData, orderBook) {
+  return (
+    <>
+      <LineChart
+        xAxis={[{ data: displayData[0] }]}
+        series={[
+          {
+            data: displayData[1],
+            showMark: false,
+          },
+        ]}
+        width={500}
+        height={300}
+      />
+      {orderBook != undefined && <>
+        {orderBook.BidsToString()}
+        <br/><br/>
+        {orderBook.AsksToString()}
+      </>}
+    </>
+  )
 }
 
 function App() {
-  const [data, setData] = useState(new OrderBook([5]))
+  const [data, setData] = useState(new OrderBook([5], [], []))
   const [display, setDisplay] = useState(<></>)
   const displayData = useRef( [[], []] )
   const Sim = StartSim(data)
@@ -40,7 +49,6 @@ function App() {
 
     return () => {
       clearInterval(intervalID.current)
-      console.log(intervalID.current);
     }
   }, [])
 
@@ -50,8 +58,8 @@ function App() {
 
   return (
     <>
-      {display}
       <Button onClick={handleButton} variant="contained">STOP</Button>
+      {display}
     </>
   );
 }
