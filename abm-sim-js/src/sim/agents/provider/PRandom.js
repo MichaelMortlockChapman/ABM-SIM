@@ -1,6 +1,6 @@
 import {e, pow, max} from "mathjs"
 import jStat from "jStat"
-import MarketOrder, {OrderType} from '../MarketOrder.js'
+import MarketOrder, {OrderType} from '../../MarketOrder.js'
 
 export default class PRandom {
   Action(moment, time) {

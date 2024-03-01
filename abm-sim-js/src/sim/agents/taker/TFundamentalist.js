@@ -1,5 +1,5 @@
-import MarketOrder, { OrderType } from "../MarketOrder.js"
-import {calculatePowerLawVolume} from '../Util.js'
+import MarketOrder, { OrderType } from "../../MarketOrder.js"
+import {calculatePowerLawVolume} from '../../Util.js'
 
 export default class TFundamentalist {
   fundamentalistPrice;

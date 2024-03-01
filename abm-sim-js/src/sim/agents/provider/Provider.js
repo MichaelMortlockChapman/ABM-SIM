@@ -1,7 +1,7 @@
 import {e, pow} from "mathjs"
 import jStat from "jStat"
-import MarketOrder, {OrderType} from '../MarketOrder.js'
-import {calculatePowerLawVolume} from '../Util.js'
+import MarketOrder, {OrderType} from '../../MarketOrder.js'
+import {calculatePowerLawVolume} from '../../Util.js'
 
 export default class Provider {
   Action(moment) {
