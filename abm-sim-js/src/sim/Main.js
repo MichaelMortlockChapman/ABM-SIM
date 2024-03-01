@@ -4,15 +4,29 @@ import MarketOrder, { OrderType } from "./MarketOrder.js";
 import PFRandom from "./agents/provider/PFRandom.js"
 import RLAgent from './agents/RLAgent.js';
 
-export default function StartSim(orderBook) {
-  const RLAgents = []
-  const agents = []
-  for (let i = 0; i < 50; i++) {
-    RLAgents.push(new RLAgent(5)) 
+function SimSettingsFactory(settings) {
+  const result = {
+    "RLAgents": [],
+    "agents": [],
   }
-  for (let i = 0; i < 5; i++) {
-    agents.push(new PFRandom(5)) 
+  if (settings.checked[0]) {
+    Array(settings.amounts[0]).keys().forEach(() => {
+      result.RLAgents.push(new RLAgent(settings.startingPrice))
+    })
   }
+  if (settings.checked[1]) {
+    Array(settings.amounts[1]).keys().forEach(() => {
+      result.agents.push(new PFRandom(settings.FPFPrice))
+    })
+  }
+  return result
+}
+
+export default function StartSim(orderBook, settings) {
+  console.log(settings);
+  const simSettings = SimSettingsFactory(settings)
+  const RLAgents = simSettings.RLAgents
+  const agents = simSettings.agents
 
   const time = {current:0}
 

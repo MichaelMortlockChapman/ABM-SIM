@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactApexCharts from 'react-apexcharts'
+import PaperContainer from './PaperContainer';
 
 class BoxPlotChart extends React.Component {
   constructor(props) {
@@ -48,7 +49,6 @@ class BoxPlotChart extends React.Component {
           },
           yaxis: {
             min: 0,
-            max: 20,
           }
         }
       },
@@ -76,11 +76,9 @@ class BoxPlotChart extends React.Component {
 
   render() {
     return (
-      <div>
-        <div id="chart">
-        <ReactApexCharts options={this.state.options} series={this.state.series} type="boxPlot" width={500}/>
-        </div>
-      </div>
+      <PaperContainer>
+        <ReactApexCharts options={this.state.options} series={this.state.series} type="boxPlot"/>
+      </PaperContainer>
     );
   }
 }

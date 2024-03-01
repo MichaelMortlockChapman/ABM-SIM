@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import ReactApexCharts from 'react-apexcharts'
 import ApexCharts from 'apexcharts'
+import PaperContainer from './PaperContainer'
 
 class LineChart extends React.Component {
   constructor(props) {
@@ -8,12 +9,11 @@ class LineChart extends React.Component {
 
     this.state = {
       series: [{
-        data: [[26, 26]]
+        data: [[]]
       }],
       options: {
         chart: {
           id: 'realtime',
-          height: 350,
           type: 'line',
           toolbar: {
             show: false
@@ -66,7 +66,9 @@ class LineChart extends React.Component {
 
   render() {
     return (
-      <ReactApexCharts options={this.state.options} series={this.state.series} type="line" width={500}/>
+      <PaperContainer>
+        <ReactApexCharts options={this.state.options} series={this.state.series} type="line"/>
+      </PaperContainer>
     );
   }
 }
