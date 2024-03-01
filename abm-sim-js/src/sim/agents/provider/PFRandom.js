@@ -1,6 +1,6 @@
 import {e, pow, max} from "mathjs"
 import jStat from "jStat"
-import MarketOrder, {OrderType} from '../MarketOrder.js'
+import MarketOrder, {OrderType} from '../../MarketOrder.js'
 
 export default class PFRandom {
   fundamentalPrice
@@ -22,8 +22,10 @@ export default class PFRandom {
   }
   
   calculatePrice(buying, moment) {
-    const n = max([jStat.normal.sample(this.fundamentalPrice + buying ? 1 : -1, 40), 0])
-    return Math.round(((n) + Number.EPSILON) * 100) / 100
+    let result
+    const alpha = 1 + ((moment.p_k))
+    result = this.fundamentalPrice + (Math.random() > 0.5 ? 1 : -1) * Math.abs(this.fundamentalPrice - (this.fundamentalPrice / pow(1 - Math.random(), 1 / (alpha + 1))))
+    return max([result, 0])
   }
 }
 

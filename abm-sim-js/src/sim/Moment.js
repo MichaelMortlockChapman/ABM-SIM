@@ -7,7 +7,7 @@ export default class Moment {
   spread
   p_k 
   min
-  max 
+  max
   constructor(ob) {
     this.mean = mean(ob.prices)
     this.stddev = std(ob.prices)

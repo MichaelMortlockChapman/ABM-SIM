@@ -19,10 +19,14 @@ export default class OrderBook {
   bids
   asks
   prices
+  bidsCopy
+  asksCopy
   constructor(prices, bids = [], asks = []) {
     this.bids = bids
     this.asks = asks
     this.prices = prices
+    this.asksCopy = []
+    this.bidsCopy = []
   }
 
   AddPrice(price) {
@@ -39,6 +43,7 @@ export default class OrderBook {
   ClearOld(time) {
     this.bids = this.bids.filter((bid) => Math.abs(time - bid.time) < 2)
     this.asks = this.asks.filter((ask) => Math.abs(time - ask.time) < 2)
+    this.prices = this.prices.filter((v,i) => this.prices.length - (1000 + 1) < i)
   }
 
   SortBids() {
@@ -57,5 +62,15 @@ export default class OrderBook {
   }
   AsksToString() {
     return `[${this.asks.reduce((total, i) => total + `${i.ToString()} `, " ")}]`
+  }
+
+  ClearCopyOrders() {
+    this.asksCopy = []
+    this.bidsCopy = []
+  }
+
+  CopyOrders() {
+    this.asksCopy = [...this.asks]
+    this.bidsCopy = [...this.bids]
   }
 }

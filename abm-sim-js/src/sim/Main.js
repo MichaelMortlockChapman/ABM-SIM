@@ -1,21 +1,22 @@
 import Moment from './Moment.js'
 import MarketOrder, { OrderType } from "./MarketOrder.js";
 
-import TChartist from "./taker/TChartist.js";
-import TFundamentalist from "./taker/TFundamentalist.js";
-import Provider from "./provider/Provider.js"
-import PRandom from "./provider/PRandom.js";
-import PFRandom from "./provider/PFRandom.js"
+import PFRandom from "./agents/provider/PFRandom.js"
+import RLAgent from './agents/RLAgent.js';
 
 export default function StartSim(orderBook) {
+  const RLAgents = []
   const agents = []
   for (let i = 0; i < 50; i++) {
-    agents.push(new PFRandom(5))
+    RLAgents.push(new RLAgent(5)) 
+  }
+  for (let i = 0; i < 5; i++) {
+    agents.push(new PFRandom(5)) 
   }
 
   const time = {current:0}
 
-  function SimLoop() {
+  async function SimLoop() {
     //############## GEN MARKET ORDERS ##############
     const moment = new Moment(orderBook)
     //simple function to pass actions (market orders) to their arrays
@@ -32,7 +33,10 @@ export default function StartSim(orderBook) {
       }
     }
 
+    orderBook.ClearCopyOrders()
     agents.forEach(doAction)
+    RLAgents.forEach(doAction)
+    orderBook.CopyOrders()
 
     //############## MATCH ORDERS ##############
     orderBook.SortBids()
@@ -60,15 +64,7 @@ export default function StartSim(orderBook) {
     //############## UPDATE/CLEAN AGENTS/ORDER BOOK ##############
     orderBook.ClearOld(time.current)
     time.current = time.current + 1
-
-    //############## PRINT INFO ##############
-    // console.log(`ORDER BOOK: ${orderBook.ToString()}`)
-    // console.log(`MOMENT: ${moment.ToString()}`)
-    // console.log(`BIDS (${bids.length}):`)
-    // console.log(`[${bids.reduce((total, i) => total + `${i.ToString()} `, " ")}]`)
-    // console.log(`ASKS (${asks.length}):`)
-    // console.log(`[${asks.reduce((total, i) => total + `${i.ToString()} `, " ")}]`)
-    // console.log("")
+    await Promise.all([RLAgents.map((agent) => agent.Learn(new Moment(orderBook)))])
   }
   
   return {
