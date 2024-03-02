@@ -4,7 +4,7 @@ export default function PaperContainer(props) {
   return (
     <Paper sx={{
       width: '80vw',
-      // maxWidth: '480px',
+      maxWidth: '780px',
       margin: '15px',
       padding: '20px',
       ...props.style

@@ -50,7 +50,21 @@ class BoxPlotChart extends React.Component {
           yaxis: {
             min: 0,
           }
-        }
+        },
+        xaxis: {
+          title: {
+            text: props.xaxisTitle
+          },
+        },
+        yaxis: {
+          title: {
+            text: props.yaxisTitle
+          }
+        },
+        title: {
+          text: props.title,
+          align: 'left'
+        },
       },
       Update: (series) => {
         this.setState({
@@ -70,7 +84,8 @@ class BoxPlotChart extends React.Component {
             }
           ],
         })
-      }
+      },
+      children: props.children
     }
   }
 
@@ -78,6 +93,7 @@ class BoxPlotChart extends React.Component {
     return (
       <PaperContainer>
         <ReactApexCharts options={this.state.options} series={this.state.series} type="boxPlot"/>
+        {this.state.children}
       </PaperContainer>
     );
   }

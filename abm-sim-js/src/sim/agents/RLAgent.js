@@ -1,5 +1,4 @@
-import {e, pow, max} from "mathjs"
-import jStat from "jStat"
+import {pow, max} from "mathjs"
 import MarketOrder, {OrderType} from '../MarketOrder.js'
 
 import * as tf from '@tensorflow/tfjs'

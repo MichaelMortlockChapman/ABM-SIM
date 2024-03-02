@@ -23,7 +23,6 @@ function SimSettingsFactory(settings) {
 }
 
 export default function StartSim(orderBook, settings) {
-  console.log(settings);
   const simSettings = SimSettingsFactory(settings)
   const RLAgents = simSettings.RLAgents
   const agents = simSettings.agents

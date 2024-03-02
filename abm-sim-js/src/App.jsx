@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { Button, Checkbox, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Stack, TextField, Typography } from "@mui/material";
-import {median, min, max, mean, ceil} from "mathjs"
+import { Button, Checkbox, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, Stack, TextField, Typography } from "@mui/material";
+import { min, max, mean } from "mathjs"
 
 import StartSim from "./sim/Main.js";
 import OrderBook from "./sim/OrderBook.js";
@@ -8,6 +8,7 @@ import BoxPlotChart from "./components/charts/BoxPlot.jsx";
 import LineChart from "./components/charts/Line.jsx";
 import jstat from "jStat";
 import PaperContainer from "./components/charts/PaperContainer.jsx";
+import BarChart from "./components/charts/Bar.jsx";
 
 function dropDec(val) {
   return Math.round((val + Number.EPSILON) * 100) / 100
@@ -38,6 +39,8 @@ function makeDataBlock() {
     series: undefined,
     bidSeries: undefined,
     askSeries: undefined,
+    volumeSeries: undefined,
+
   }
 }
 
@@ -103,16 +106,19 @@ function App() {
 
   const lineRef = useRef(null)
   const boxPlotRef = useRef(null)
+  const barRef = useRef(null)
 
   const data = useRef(makeDataBlock())
 
   const [stopped, setStopped] = useState(true)
   const simStepIntervalID = useRef(-1)
   const handleUpdate = async () => {
+    const lastVolumeNum = data.current.orderbook.prices.length
     await data.current.sim.step()
     data.current.series.push(Math.round((mean(takeLast(data.current.orderbook.prices, 50)) + Number.EPSILON) * 100) / 100)
     data.current.orderbook.bidsCopy.map((v) => dropDec(v.price)).forEach((v) => data.current.bidSeries.push(v))
     data.current.orderbook.asksCopy.map((v) => dropDec(v.price)).forEach((v) => data.current.askSeries.push(v))
+    data.current.volumeSeries.push(Math.abs(data.current.orderbook.prices.length - lastVolumeNum))
   }
   const handleStart = () => {
     //reset values incase for restart use
@@ -122,6 +128,7 @@ function App() {
     data.current.series = []
     data.current.bidSeries = []
     data.current.askSeries = []
+    data.current.volumeSeries = []
     data.current.sim = StartSim(data.current.orderbook, {
       checked: checked,
       amounts: amounts.map((v) => parseFloat(v)),
@@ -155,11 +162,17 @@ function App() {
         lineRef.current.state.Update(takeLast(data.current.series, 100))
       }
     }, 100)
+    const barPlotUpdate = setInterval(() => {
+      if (data.current.volumeSeries !== undefined) {
+        barRef.current.state.Update(takeLast(data.current.volumeSeries, 100))
+      }
+    }, 100)
     // clear intervals for unmounting
     return () => {
       clearInterval(simStepIntervalID.current)
       clearInterval(boxPlotUpdate)
       clearInterval(linePlotUpdate)
+      clearInterval(barPlotUpdate)
     }
   }, [])
 
@@ -174,7 +187,7 @@ function App() {
                 <FormLabel component="legend">Pick Agents</FormLabel>
                 {error && <FormHelperText>Need to pick at least 1 agent type.</FormHelperText>}
                 <FormGroup>
-                  <AgentFeild checked={checked} handleCheckedChange={handleCheckedChange} agentIndex={0} label="NN Agent" amounts={amounts} handleAmountChange={handleAmountChange}/>
+                  <AgentFeild checked={checked} handleCheckedChange={handleCheckedChange} agentIndex={0} label="Dense NN Agent" amounts={amounts} handleAmountChange={handleAmountChange}/>
                   <AgentFeild checked={checked} handleCheckedChange={handleCheckedChange} agentIndex={1} label="Random Fundamental Provider" amounts={amounts} handleAmountChange={handleAmountChange}>
                     <TextField 
                       label="Fundental Price"
@@ -208,8 +221,13 @@ function App() {
             </div>
           </form>
         </PaperContainer>
-        <MyLineChart series={[]} ref={lineRef}/>
-        <MyBoxPlotChart series={[]} ref={boxPlotRef}/>
+        <Grid container alignContent="center" justifyContent="center">
+          <MyLineChart title="Price Average Line Graph" series={[]} ref={lineRef} yaxisTitle="Price Avg (units)" xaxisTitle="Last 100* Time Units"/>
+          <MyBoxPlotChart title="Order Price Box & Whisker Graph" series={[]} ref={boxPlotRef} xaxisTitle="Price (units)">
+            <Typography variant="body2" sx={{fontSize: '0.8rem', color: 'grey'}}>Updates every 1 second</Typography>
+          </MyBoxPlotChart>
+          <MyBarChart title="Volume Exchanged Bar Graph" series={[]} ref={barRef} yaxisTitle="Volume (units)" xaxisTitle="Last 100* Time Units"/>
+        </Grid>
       </Stack>
     </>
   );
@@ -217,14 +235,21 @@ function App() {
 
 const MyLineChart = forwardRef(function MyChart(props, ref) {
   return (
-    <LineChart series={props.series} ref={ref}/>
+    <LineChart series={props.series} ref={ref} {...props}/>
   )
 })
 
 const MyBoxPlotChart = forwardRef(function MyChart(props, ref) {
   return (
-    <BoxPlotChart series={props.series} ref={ref}/>
+    <BoxPlotChart series={props.series} ref={ref} {...props}/>
   )
 })
+
+const MyBarChart = forwardRef(function MyChart(props, ref) {
+  return (
+    <BarChart series={props.series} ref={ref} {...props}/>
+  )
+})
+
 
 export default App;
