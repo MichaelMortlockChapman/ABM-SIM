@@ -122,11 +122,14 @@ function App() {
   // starts/restarts sim
   const [hideGraphs, setHideGraphs] = useState(true)
   const [stopped, setStopped] = useState(true)
+  const [disableButton, setDisableButton] = useState(false)
   const simStepIntervalID = useRef(-1)
   const hidingGraphIntervalID = useRef(-1)
+  const disableButtonIntervalID = useRef(-1)
   const handleStart = () => {
     clearInterval(hidingGraphIntervalID.current)
     setHideGraphs(true)
+    setDisableButton(true)
     //reset values incase for restart use
     clearInterval(simStepIntervalID.current)
     data.current = makeDataBlock()
@@ -138,7 +141,14 @@ function App() {
     })
     simStepIntervalID.current = setInterval(setIntervalWithPromise(handleUpdate), 1)
     setStopped(false)
-    hidingGraphIntervalID.current = setInterval(() => {setHideGraphs(false)}, 100)
+    // wait a bit to display graphs, then wait a further bit to enable restart button again 
+    // (solves bug if graph are redrawn during another redraw svgs and other bits have undefined values)
+    hidingGraphIntervalID.current = setTimeout(() => {
+      setHideGraphs(false)
+      disableButtonIntervalID.current = setTimeout(() => {
+        setDisableButton(false)
+      }, 200)
+    }, 100)
   }
   // stops current sim running
   const handleStop = () => {
@@ -181,6 +191,7 @@ function App() {
     return () => {
       clearInterval(simStepIntervalID.current)
       clearInterval(hidingGraphIntervalID.current) 
+      clearInterval(disableButtonIntervalID.current)
       clearInterval(boxPlotUpdate)
       clearInterval(linePlotUpdate)
       clearInterval(barPlotUpdate)
@@ -235,7 +246,7 @@ function App() {
               />
             </Stack>
             <div style={{marginTop: '6px'}}>
-              <Button onClick={handleStart} color={simStepIntervalID.current === -1 ? "primary": "error"} variant="contained" sx={{margin:'5px'}}>{simStepIntervalID.current === -1 ? "Start": "Restart"}</Button>
+              <Button onClick={handleStart} color={simStepIntervalID.current === -1 ? "primary": "error"} variant="contained" sx={{margin:'5px'}} disabled={disableButton}>{simStepIntervalID.current === -1 ? "Start": "Restart"}</Button>
               {!stopped ?
                 <Button onClick={handleStop} variant="contained" sx={{margin:'5px'}}>STOP</Button> :
                 <Button onClick={handleResume} variant="contained" sx={{margin:'5px'}}>RESUME</Button>
