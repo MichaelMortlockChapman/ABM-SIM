@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactApexCharts from 'react-apexcharts'
 import ApexCharts from 'apexcharts'
-import PaperContainer from './PaperContainer'
+import PaperContainer from '../PaperContainer'
 
 class LineChart extends React.Component {
   constructor(props) {

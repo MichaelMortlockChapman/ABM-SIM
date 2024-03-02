@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactApexCharts from 'react-apexcharts'
-import PaperContainer from './PaperContainer'
+import PaperContainer from '../PaperContainer'
 
 class BarChart extends React.Component {
   constructor(props) {

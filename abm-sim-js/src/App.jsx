@@ -1,24 +1,27 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { Button, Checkbox, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, Stack, TextField, Typography } from "@mui/material";
+import { Button, Checkbox, FormControl, FormControlLabel, FormGroup, FormHelperText, FormLabel, Grid, Link, Stack, TextField, Typography } from "@mui/material";
 import { min, max, mean } from "mathjs"
 
 import StartSim from "./sim/Main.js";
 import OrderBook from "./sim/OrderBook.js";
 import BoxPlotChart from "./components/charts/BoxPlot.jsx"; 
 import LineChart from "./components/charts/Line.jsx";
-import jstat from "jStat";
-import PaperContainer from "./components/charts/PaperContainer.jsx";
+import jstat from "jstat";
+import PaperContainer from "./components/PaperContainer.jsx";
 import BarChart from "./components/charts/Bar.jsx";
 
+// helper function for rounding to 2dp
 function dropDec(val) {
   return Math.round((val + Number.EPSILON) * 100) / 100
 }
 
+// helper funciton for values needed for BoxPlot graph
 function getBoxPlotValues(arr) {
   let qartiles = jstat(arr).quartiles()
   return [min(arr), qartiles[0], qartiles[1], qartiles[2], max(arr)]
 }
 
+// helper function for async interval function use
 function setIntervalWithPromise(target) {
   return async function(...args) {
       if (target.isRunning)
@@ -30,8 +33,10 @@ function setIntervalWithPromise(target) {
   }  
 }
 
+// helper funciton to take last n items from arr
 const takeLast = (arr, n) => arr.filter((v,i) => arr.length - (n + 1) < i)
 
+// helper function to create an empty object to use later (for refrences passing rather than value)
 function makeDataBlock() {
   return {
     orderbook: undefined,
@@ -44,6 +49,7 @@ function makeDataBlock() {
   }
 }
 
+// function for agent picking form with checkbox, amount field, and room for additional details
 function AgentFeild(props) {
   const {checked, handleCheckedChange, agentIndex, label, amounts, handleAmountChange} = props
 
@@ -66,7 +72,6 @@ function AgentFeild(props) {
           value={amounts[agentIndex]}
           onChange={handleAmountChange(agentIndex)}
         />
-        {/* {props.children} */}
       </Stack>
       <Stack direction={'row'} sx={{margin: '6px 0px 6px 0px'}} alignItems={'center'} justifyContent='end'>
         {props.children}
@@ -76,42 +81,36 @@ function AgentFeild(props) {
 }
 
 function App() {
-    // ############### Sim Settings
-    const [checked, setChecked] = useState([true, true])
-    const handleCheckedChange = (checkedIndex) => {
-      return (event) => {
-        setChecked(checked.map((val, i) => i === checkedIndex ? event.target.checked : val))
-      }
+  // ############### Sim Settings
+  const [checked, setChecked] = useState([true, true, false])
+  const handleCheckedChange = (checkedIndex) => {
+    return (event) => {
+      setChecked(checked.map((val, i) => i === checkedIndex ? event.target.checked : val))
     }
-    const [amounts, setAmounts] = useState([50, 5])
-    const handleAmountChange = (checkedIndex) => {
-      return (event) => {
-        setAmounts(amounts.map((val, i) => i === checkedIndex ? event.target.value : val))
-      }
+  }
+  const [amounts, setAmounts] = useState([50, 5, 0])
+  const handleAmountChange = (checkedIndex) => {
+    return (event) => {
+      setAmounts(amounts.map((val, i) => i === checkedIndex ? event.target.value : val))
     }
-  
-    const [FPFPrice, setFPFPrice] = useState(5)
-    const handleFPFPriceChange = (e) => {
-      setFPFPrice(e.target.value)
-    }
-  
-    const [startingPrice, setStartingPrice] = useState(5)
-    const handleStartingPriceChange = (e) => {
-      setStartingPrice(parseInt(e.target.value)) 
-    }
-  
-    const error = checked.filter((v) => v).length < 1;
-    // ############### Sim Settings END
+  }
 
+  const [FPFPrice, setFPFPrice] = useState(5)
+  const handleFPFPriceChange = (e) => {
+    setFPFPrice(e.target.value)
+  }
 
-  const lineRef = useRef(null)
-  const boxPlotRef = useRef(null)
-  const barRef = useRef(null)
+  const [startingPrice, setStartingPrice] = useState(5)
+  const handleStartingPriceChange = (e) => {
+    setStartingPrice(parseInt(e.target.value)) 
+  }
 
+  const error = checked.filter((v) => v).length < 1;
+  // ############### Sim Settings END
+  
+  // simm context/current values
   const data = useRef(makeDataBlock())
-
-  const [stopped, setStopped] = useState(true)
-  const simStepIntervalID = useRef(-1)
+  // sim update/step logic
   const handleUpdate = async () => {
     const lastVolumeNum = data.current.orderbook.prices.length
     await data.current.sim.step()
@@ -120,6 +119,9 @@ function App() {
     data.current.orderbook.asksCopy.map((v) => dropDec(v.price)).forEach((v) => data.current.askSeries.push(v))
     data.current.volumeSeries.push(Math.abs(data.current.orderbook.prices.length - lastVolumeNum))
   }
+  // starts/restarts sim
+  const [stopped, setStopped] = useState(true)
+  const simStepIntervalID = useRef(-1)
   const handleStart = () => {
     //reset values incase for restart use
     clearInterval(simStepIntervalID.current)
@@ -138,17 +140,25 @@ function App() {
     simStepIntervalID.current = setInterval(setIntervalWithPromise(handleUpdate), 1)
     setStopped(false)
   }
+  // stops current sim running
   const handleStop = () => {
     clearInterval(simStepIntervalID.current)
     setStopped(true)
   }
+  // starts currt sim running again
   const handleResume = () => {
     simStepIntervalID.current = setInterval(setIntervalWithPromise(handleUpdate), 1)
     setStopped(false)
   }
 
+  // chart refs for grabbing their state to update them later
+  //  (couldn't get states that are passed thru to update on state change so using refs)
+  const lineRef = useRef(null)
+  const boxPlotRef = useRef(null)
+  const barRef = useRef(null)
+  
+  // used to run intervals to update graphs
   useEffect(() => {
-    // update boxPlot every n seconds so jumps are not as bad
     const boxPlotUpdate = setInterval(() => {
       if (data.current.bidSeries !== undefined && data.current.askSeries !== undefined) {
         boxPlotRef.current.state.Update({
@@ -180,6 +190,16 @@ function App() {
     <>
       <Stack sx={{width: '100%'}} alignItems={'center'}>
         <PaperContainer>
+          <Stack direction="row" justifyContent="center">
+            <Typography variant="h3">ABM SIM</Typography>
+          </Stack>
+          <Typography>
+            A basic agent-based model simulation implmentation for a one item market. See source code <Link href="https://github.com/MichaelMortlockChapman/ABM-SIM">here</Link>.
+          </Typography>
+          
+        </PaperContainer>
+        {/* SIM SETTINGS */}
+        <PaperContainer>
           <form>
             <Typography variant="h5">Settings</Typography>
             <Stack sx={{marginTop: '15px'}}>
@@ -187,8 +207,8 @@ function App() {
                 <FormLabel component="legend">Pick Agents</FormLabel>
                 {error && <FormHelperText>Need to pick at least 1 agent type.</FormHelperText>}
                 <FormGroup>
-                  <AgentFeild checked={checked} handleCheckedChange={handleCheckedChange} agentIndex={0} label="Dense NN Agent" amounts={amounts} handleAmountChange={handleAmountChange}/>
-                  <AgentFeild checked={checked} handleCheckedChange={handleCheckedChange} agentIndex={1} label="Random Fundamental Provider" amounts={amounts} handleAmountChange={handleAmountChange}>
+                  <AgentFeild agentIndex={0} label="Dense NN Agent" checked={checked} handleCheckedChange={handleCheckedChange} amounts={amounts} handleAmountChange={handleAmountChange}/>
+                  <AgentFeild agentIndex={1} label="Random Fundamental Provider" checked={checked} handleCheckedChange={handleCheckedChange} amounts={amounts} handleAmountChange={handleAmountChange}>
                     <TextField 
                       label="Fundental Price"
                       size="small"
@@ -200,6 +220,7 @@ function App() {
                       disabled={!checked[1]}
                     />
                   </AgentFeild>
+                  <AgentFeild agentIndex={2} label="Random Provider" checked={checked} handleCheckedChange={handleCheckedChange} amounts={amounts} handleAmountChange={handleAmountChange}/>
                 </FormGroup>
               </FormControl>
               <TextField 
@@ -221,6 +242,7 @@ function App() {
             </div>
           </form>
         </PaperContainer>
+        {/* SIM GRAPHS */}
         <Grid container alignContent="center" justifyContent="center">
           <MyLineChart title="Price Average Line Graph" series={[]} ref={lineRef} yaxisTitle="Price Avg (units)" xaxisTitle="Last 100* Time Units"/>
           <MyBoxPlotChart title="Order Price Box & Whisker Graph" series={[]} ref={boxPlotRef} xaxisTitle="Price (units)">

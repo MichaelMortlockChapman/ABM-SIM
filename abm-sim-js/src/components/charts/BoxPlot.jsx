@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactApexCharts from 'react-apexcharts'
-import PaperContainer from './PaperContainer';
+import PaperContainer from '../PaperContainer';
 
 class BoxPlotChart extends React.Component {
   constructor(props) {
@@ -47,9 +47,6 @@ class BoxPlotChart extends React.Component {
           stroke: {
             colors: ['#6c757d']
           },
-          yaxis: {
-            min: 0,
-          }
         },
         xaxis: {
           title: {
