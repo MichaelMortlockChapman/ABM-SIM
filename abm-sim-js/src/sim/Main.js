@@ -2,7 +2,9 @@ import Moment from './Moment.js'
 import MarketOrder, { OrderType } from "./MarketOrder.js";
 
 import PFRandom from "./agents/provider/PFRandom.js"
+import PRandom from './agents/provider/PRandom.js';
 import RLAgent from './agents/RLAgent.js';
+
 
 function SimSettingsFactory(settings) {
   const result = {
@@ -17,6 +19,11 @@ function SimSettingsFactory(settings) {
   if (settings.checked[1]) {
     Array(settings.amounts[1]).keys().forEach(() => {
       result.agents.push(new PFRandom(settings.FPFPrice))
+    })
+  }
+  if (settings.checked[2]) {
+    Array(settings.amounts[2]).keys().forEach(() => {
+      result.agents.push(new PRandom(settings.FPFPrice))
     })
   }
   return result

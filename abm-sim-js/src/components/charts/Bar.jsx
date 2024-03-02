@@ -18,7 +18,7 @@ class BarChart extends React.Component {
           },
           zoom: {
             enabled: false
-          }
+          },
         },
         title: {
           text: props.title,
@@ -45,9 +45,10 @@ class BarChart extends React.Component {
         }
       },
       Update: (series) => {
+        const _series = [...series]
         this.setState({
           series: [{
-            data: series
+            data: _series
           }]
         })
       }
@@ -57,7 +58,7 @@ class BarChart extends React.Component {
   render() {
     return (
       <PaperContainer>
-        <ReactApexCharts options={this.state.options} series={this.state.series} type="bar"/>
+        <ReactApexCharts options={this.state.options} series={this.state.series} type="bar" width={"100%"}/>
       </PaperContainer>
     );
   }

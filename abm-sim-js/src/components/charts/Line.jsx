@@ -65,8 +65,9 @@ class LineChart extends React.Component {
         },
       },
       Update: (series) => {
+        const _series = [...series]
         ApexCharts.exec('realtime', 'updateSeries', [{
-          data: series.map((v,i) => [i, v])
+          data: _series.map((v,i) => [i, v])
         }])
       }
     }
@@ -75,7 +76,7 @@ class LineChart extends React.Component {
   render() {
     return (
       <PaperContainer>
-        <ReactApexCharts options={this.state.options} series={this.state.series} type="line"/>
+        <ReactApexCharts options={this.state.options} series={this.state.series} type="line" width={"100%"}/>
       </PaperContainer>
     );
   }

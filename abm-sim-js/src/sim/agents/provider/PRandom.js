@@ -1,5 +1,5 @@
-import {e, pow, max} from "mathjs"
-import jStat from "jStat"
+import {max} from "mathjs"
+import jstat from "jstat"
 import MarketOrder, {OrderType} from '../../MarketOrder.js'
 
 export default class PRandom {
@@ -18,6 +18,6 @@ export default class PRandom {
 }
 
 function calculatePrice(buying, moment) {
-  const n = max([jStat.normal.sample(moment.midPrice, 40), 0])
+  const n = max([jstat.normal.sample(moment.midPrice, 40), 0])
   return Math.round(((n) + Number.EPSILON) * 100) / 100
 }

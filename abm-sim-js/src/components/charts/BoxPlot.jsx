@@ -25,6 +25,9 @@ class BoxPlotChart extends React.Component {
       options: {
         chart: {
           type: 'boxPlot',
+          toolbar: {
+            show: false
+          },
           zoom: {
             enabled: false
           },
@@ -64,6 +67,8 @@ class BoxPlotChart extends React.Component {
         },
       },
       Update: (series) => {
+        const bids = [...series.bids]
+        const asks = [...series.asks]
         this.setState({
           series: [
             {
@@ -71,11 +76,11 @@ class BoxPlotChart extends React.Component {
               data: [
                 {
                   x: 'Bids',
-                  y: series.bids
+                  y: bids
                 },
                 {
                   x: 'Asks',
-                  y: series.asks
+                  y: asks
                 }
               ]
             }
@@ -89,7 +94,7 @@ class BoxPlotChart extends React.Component {
   render() {
     return (
       <PaperContainer>
-        <ReactApexCharts options={this.state.options} series={this.state.series} type="boxPlot"/>
+        <ReactApexCharts options={this.state.options} series={this.state.series} type="boxPlot" width={"100%"}/>
         {this.state.children}
       </PaperContainer>
     );

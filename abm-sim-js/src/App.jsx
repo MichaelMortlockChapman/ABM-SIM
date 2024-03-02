@@ -36,19 +36,6 @@ function setIntervalWithPromise(target) {
 // helper funciton to take last n items from arr
 const takeLast = (arr, n) => arr.filter((v,i) => arr.length - (n + 1) < i)
 
-// helper function to create an empty object to use later (for refrences passing rather than value)
-function makeDataBlock() {
-  return {
-    orderbook: undefined,
-    sim: undefined,
-    series: undefined,
-    bidSeries: undefined,
-    askSeries: undefined,
-    volumeSeries: undefined,
-
-  }
-}
-
 // function for agent picking form with checkbox, amount field, and room for additional details
 function AgentFeild(props) {
   const {checked, handleCheckedChange, agentIndex, label, amounts, handleAmountChange} = props
@@ -110,6 +97,19 @@ function App() {
   
   // simm context/current values
   const data = useRef(makeDataBlock())
+  // helper function to create an empty object to use later (for refrences passing rather than value)
+  function makeDataBlock() {
+    return {
+      orderbook: new OrderBook([...Array(50).keys().map(() => startingPrice)], [], []),
+      sim: undefined,
+      series: [],
+      bidSeries: [],
+      askSeries: [],
+      volumeSeries: [],
+
+    }
+  }
+
   // sim update/step logic
   const handleUpdate = async () => {
     const lastVolumeNum = data.current.orderbook.prices.length
@@ -120,17 +120,16 @@ function App() {
     data.current.volumeSeries.push(Math.abs(data.current.orderbook.prices.length - lastVolumeNum))
   }
   // starts/restarts sim
+  const [hideGraphs, setHideGraphs] = useState(true)
   const [stopped, setStopped] = useState(true)
   const simStepIntervalID = useRef(-1)
+  const hidingGraphIntervalID = useRef(-1)
   const handleStart = () => {
+    clearInterval(hidingGraphIntervalID.current)
+    setHideGraphs(true)
     //reset values incase for restart use
     clearInterval(simStepIntervalID.current)
     data.current = makeDataBlock()
-    data.current.orderbook = new OrderBook([...Array(50).keys().map(() => startingPrice)], [], [])
-    data.current.series = []
-    data.current.bidSeries = []
-    data.current.askSeries = []
-    data.current.volumeSeries = []
     data.current.sim = StartSim(data.current.orderbook, {
       checked: checked,
       amounts: amounts.map((v) => parseFloat(v)),
@@ -139,6 +138,7 @@ function App() {
     })
     simStepIntervalID.current = setInterval(setIntervalWithPromise(handleUpdate), 1)
     setStopped(false)
+    hidingGraphIntervalID.current = setInterval(() => {setHideGraphs(false)}, 100)
   }
   // stops current sim running
   const handleStop = () => {
@@ -160,7 +160,7 @@ function App() {
   // used to run intervals to update graphs
   useEffect(() => {
     const boxPlotUpdate = setInterval(() => {
-      if (data.current.bidSeries !== undefined && data.current.askSeries !== undefined) {
+      if (data.current.bidSeries !== undefined && data.current.askSeries !== undefined && boxPlotRef.current !== null) {
         boxPlotRef.current.state.Update({
           bids: data.current.bidSeries.length > 0 ? getBoxPlotValues(takeLast(data.current.bidSeries, 50)) : [],
           asks: data.current.askSeries.length > 0 ? getBoxPlotValues(takeLast(data.current.askSeries, 50)): [],
@@ -168,18 +168,19 @@ function App() {
       }
     }, 1000)
     const linePlotUpdate = setInterval(() => {
-      if (data.current.series !== undefined) {
+      if (data.current.series !== undefined && lineRef.current !== null) {
         lineRef.current.state.Update(takeLast(data.current.series, 100))
       }
     }, 100)
     const barPlotUpdate = setInterval(() => {
-      if (data.current.volumeSeries !== undefined) {
+      if (data.current.volumeSeries !== undefined && barRef.current !== null) {
         barRef.current.state.Update(takeLast(data.current.volumeSeries, 100))
       }
     }, 100)
     // clear intervals for unmounting
     return () => {
       clearInterval(simStepIntervalID.current)
+      clearInterval(hidingGraphIntervalID.current) 
       clearInterval(boxPlotUpdate)
       clearInterval(linePlotUpdate)
       clearInterval(barPlotUpdate)
@@ -244,11 +245,13 @@ function App() {
         </PaperContainer>
         {/* SIM GRAPHS */}
         <Grid container alignContent="center" justifyContent="center">
-          <MyLineChart title="Price Average Line Graph" series={[]} ref={lineRef} yaxisTitle="Price Avg (units)" xaxisTitle="Last 100* Time Units"/>
-          <MyBoxPlotChart title="Order Price Box & Whisker Graph" series={[]} ref={boxPlotRef} xaxisTitle="Price (units)">
-            <Typography variant="body2" sx={{fontSize: '0.8rem', color: 'grey'}}>Updates every 1 second</Typography>
-          </MyBoxPlotChart>
-          <MyBarChart title="Volume Exchanged Bar Graph" series={[]} ref={barRef} yaxisTitle="Volume (units)" xaxisTitle="Last 100* Time Units"/>
+          {!hideGraphs && <>
+            <MyLineChart title="Price Average Line Graph" series={[]} ref={lineRef} yaxisTitle="Price Avg (units)" xaxisTitle="Last 100* Time Units"/>
+            <MyBoxPlotChart title="Order Price Box & Whisker Graph" series={[]} ref={boxPlotRef} xaxisTitle="Price (units)">
+              <Typography variant="body2" sx={{fontSize: '0.8rem', color: 'grey'}}>Updates every 1 second</Typography>
+            </MyBoxPlotChart>
+            <MyBarChart title="Volume Exchanged Bar Graph" series={[]} ref={barRef} yaxisTitle="Volume (units)" xaxisTitle="Last 100* Time Units"/>
+          </>}
         </Grid>
       </Stack>
     </>
