@@ -149,7 +149,7 @@ function App() {
   }
   // starts/restarts sim
   const [hideGraphs, setHideGraphs] = useState(true)
-  const [stopped, setStopped] = useState(true)
+  const [isNotstopped, setStopped] = useState(true)
   const [disableButton, setDisableButton] = useState(false)
   const simStepIntervalID = useRef(-1)
   const hidingGraphIntervalID = useRef(-1)
@@ -197,6 +197,19 @@ function App() {
   const boxPlotRef = useRef(null)
   const barRef = useRef(null)
   
+  // state / useEffect for market orders currently standing, seperate to other useEffect as this is depenent on "isNotStopped"
+  const [marketOrderSizes, setMarketOrderSizes] = useState([0,0])
+  useEffect(() => {
+    const MoSizeInterval = setInterval(() => {
+      if (data.current.orderbook !== undefined && !isNotstopped) {
+        setMarketOrderSizes([data.current.orderbook.bids.length, data.current.orderbook.asks.length])
+      }
+    }, 100)
+    return () => {
+      clearInterval(MoSizeInterval)
+    }
+  }, [isNotstopped])
+
   // used to run intervals to update graphs
   useEffect(() => {
     const boxPlotUpdate = setInterval(() => {
@@ -271,7 +284,7 @@ function App() {
             </Stack>
             <div style={{marginTop: '6px'}}>
               <Button onClick={handleStart} color={simStepIntervalID.current === -1 ? "primary": "error"} variant="contained" sx={{margin:'5px'}} disabled={disableButton}>{simStepIntervalID.current === -1 ? "Start": "Restart"}</Button>
-              {!stopped ?
+              {!isNotstopped ?
                 <Button onClick={handleStop} variant="contained" sx={{margin:'5px'}}>STOP</Button> :
                 <Button onClick={handleResume} variant="contained" sx={{margin:'5px'}}>RESUME</Button>
               }
@@ -282,10 +295,15 @@ function App() {
         <Grid container alignContent="center" justifyContent="center">
           {!hideGraphs && <>
             <MyLineChart title="Price Average Line Graph" series={[]} ref={lineRef} yaxisTitle="Price Avg (units)" xaxisTitle="Last 100* Time Units"/>
-            <MyBoxPlotChart title="Order Price Box & Whisker Graph" series={[]} ref={boxPlotRef} xaxisTitle="Price (units)">
+            <MyBoxPlotChart title="Successful Orders' Price Box & Whisker Graph" series={[]} ref={boxPlotRef} xaxisTitle="Price (units)">
               <Typography variant="body2" sx={{fontSize: '0.8rem', color: 'grey'}}>Updates every 1 second</Typography>
             </MyBoxPlotChart>
             <MyBarChart title="Volume Exchanged Bar Graph" series={[]} ref={barRef} yaxisTitle="Volume (units)" xaxisTitle="Last 100* Time Units"/>
+            <PaperContainer style={{height: 'fit-content'}}>
+            <Typography variant="h5">Amount of Orders Standing.</Typography>
+              <Typography variant="body2" sx={{fontSize: '1rem'}}>{`Bid Size: ${marketOrderSizes[0]}`}</Typography>
+              <Typography variant="body2" sx={{fontSize: '1rem'}}>{`Ask Size: ${marketOrderSizes[1]}`}</Typography>
+            </PaperContainer>
           </>}
         </Grid>
       </Stack>
