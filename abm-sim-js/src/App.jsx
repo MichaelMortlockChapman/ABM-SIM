@@ -67,6 +67,25 @@ function AgentFeild(props) {
   )
 }
 
+function StartingConstantTextField(props) {
+  const {label, value, onChange} = props
+  return (
+    <TextField 
+      label={label}
+      size="small"
+      InputLabelProps={{
+        shrink: true,
+      }}
+      value={value}
+      onChange={onChange}
+      sx={{
+        marginBottom: '7px'
+      }}
+      {...props}
+    />
+  )
+}
+
 function App() {
   // ############### Sim Settings
   const [checked, setChecked] = useState([true, true, false])
@@ -89,7 +108,17 @@ function App() {
 
   const [startingPrice, setStartingPrice] = useState(5)
   const handleStartingPriceChange = (e) => {
-    setStartingPrice(parseInt(e.target.value)) 
+    setStartingPrice(parseFloat(e.target.value)) 
+  }
+
+  const [startingVolume, setStartingVolume] = useState(2)
+  const handleStartingVolumeChange = (e) => {
+    setStartingVolume(parseInt(e.target.value)) 
+  }
+
+  const [startingCapital, setStartingCapital] = useState(100)
+  const handleStartingCapitalChange = (e) => {
+    setStartingCapital(parseFloat(e.target.value)) 
   }
 
   const error = checked.filter((v) => v).length < 1;
@@ -106,7 +135,6 @@ function App() {
       bidSeries: [],
       askSeries: [],
       volumeSeries: [],
-
     }
   }
 
@@ -137,6 +165,8 @@ function App() {
       checked: checked,
       amounts: amounts.map((v) => parseFloat(v)),
       startingPrice: parseFloat(startingPrice),
+      startingVolume: parseInt(startingVolume),
+      startingCapital: parseFloat(startingCapital),
       FPFPrice: parseFloat(FPFPrice)
     })
     simStepIntervalID.current = setInterval(setIntervalWithPromise(handleUpdate), 1)
@@ -235,15 +265,9 @@ function App() {
                   <AgentFeild agentIndex={2} label="Random Provider" checked={checked} handleCheckedChange={handleCheckedChange} amounts={amounts} handleAmountChange={handleAmountChange}/>
                 </FormGroup>
               </FormControl>
-              <TextField 
-                label="Starting Price"
-                size="small"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                value={startingPrice}
-                onChange={handleStartingPriceChange}
-              />
+              <StartingConstantTextField label="Starting Price" value={startingPrice} onChange={handleStartingPriceChange}/>
+              <StartingConstantTextField label="Agent Starting Volume" value={startingVolume} onChange={handleStartingVolumeChange}/>
+              <StartingConstantTextField label="Agent Starting Capital" value={startingCapital} onChange={handleStartingCapitalChange}/>
             </Stack>
             <div style={{marginTop: '6px'}}>
               <Button onClick={handleStart} color={simStepIntervalID.current === -1 ? "primary": "error"} variant="contained" sx={{margin:'5px'}} disabled={disableButton}>{simStepIntervalID.current === -1 ? "Start": "Restart"}</Button>

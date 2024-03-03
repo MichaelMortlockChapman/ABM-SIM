@@ -1,5 +1,5 @@
 import {e, pow} from "mathjs"
-import jStat from "jStat"
+import jStat from "jstat"
 import MarketOrder, {OrderType} from '../../MarketOrder.js'
 import {calculatePowerLawVolume} from '../../Util.js'
 

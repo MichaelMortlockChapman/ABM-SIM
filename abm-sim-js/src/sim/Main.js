@@ -2,37 +2,38 @@ import Moment from './Moment.js'
 import MarketOrder, { OrderType } from "./MarketOrder.js";
 
 import PFRandom from "./agents/provider/PFRandom.js"
-import PRandom from './agents/provider/PRandom.js';
-import RLAgent from './agents/RLAgent.js';
+// import PRandom from './agents/provider/PRandom.js';
+import RLAgent from './agents/taker/RLAgent.js';
 
 
 function SimSettingsFactory(settings) {
   const result = {
-    "RLAgents": [],
-    "agents": [],
+    "agentSet": {}
   }
+  let numAgents = 0
   if (settings.checked[0]) {
     Array(settings.amounts[0]).keys().forEach(() => {
-      result.RLAgents.push(new RLAgent(settings.startingPrice))
+      result.agentSet[numAgents] = new RLAgent(numAgents++, settings.startingCapital, settings.startingVolume, settings.startingPrice)
     })
   }
   if (settings.checked[1]) {
     Array(settings.amounts[1]).keys().forEach(() => {
-      result.agents.push(new PFRandom(settings.FPFPrice))
+      result.agentSet[numAgents] = new PFRandom(numAgents++, settings.startingCapital, settings.startingVolume, settings.FPFPrice)
     })
   }
-  if (settings.checked[2]) {
-    Array(settings.amounts[2]).keys().forEach(() => {
-      result.agents.push(new PRandom(settings.FPFPrice))
-    })
-  }
+  // if (settings.checked[2]) {
+  //   Array(settings.amounts[2]).keys().forEach(() => {
+  //     result.agents.push(new PRandom(settings.FPFPrice))
+  //   })
+  // }
   return result
 }
 
 export default function StartSim(orderBook, settings) {
   const simSettings = SimSettingsFactory(settings)
-  const RLAgents = simSettings.RLAgents
-  const agents = simSettings.agents
+  // const RLAgents = simSettings.RLAgents
+  // const agents = simSettings.agents
+  const agentSet = simSettings.agentSet
 
   const time = {current:0}
 
@@ -54,8 +55,7 @@ export default function StartSim(orderBook, settings) {
     }
 
     orderBook.ClearCopyOrders()
-    agents.forEach(doAction)
-    RLAgents.forEach(doAction)
+    Object.values(agentSet).forEach(doAction)
     orderBook.CopyOrders()
 
     //############## MATCH ORDERS ##############
@@ -72,19 +72,25 @@ export default function StartSim(orderBook, settings) {
       }
       if (bid.volume === ask.volume) {
         orderBook.AddPrice(bid.price)
+        agentSet[bid.agentID].Exchange(OrderType.BUY, bid.price, bid.volume)
+        agentSet[ask.agentID].Exchange(OrderType.SELL, bid.price, ask.volume)
       } else if (bid.volume > ask.volume) {
         orderBook.AddBid(new MarketOrder(bid.orderType, bid.volume - ask.volume, bid.price))
         orderBook.AddPrice(bid.price)
+        agentSet[bid.agentID].Exchange(OrderType.BUY, bid.price, bid.volume - ask.volume)
+        agentSet[ask.agentID].Exchange(OrderType.SELL, bid.price, ask.volume)
       } else {
         orderBook.AddAsk(new MarketOrder(ask.orderType, ask.volume - bid.volume, ask.price))
         orderBook.AddPrice(bid.price)
+        agentSet[bid.agentID].Exchange(OrderType.BUY, bid.price, bid.volume)
+        agentSet[ask.agentID].Exchange(OrderType.SELL, bid.price, ask.volume - bid.volume)
       }
     }
 
     //############## UPDATE/CLEAN AGENTS/ORDER BOOK ##############
     orderBook.ClearOld(time.current)
     time.current = time.current + 1
-    await Promise.all([RLAgents.map((agent) => agent.Learn(new Moment(orderBook)))])
+    await Promise.all([Object.values(agentSet).filter((agent) => agent.isAIAgent).map((agent) => agent.Learn(new Moment(orderBook)))])
   }
   
   return {

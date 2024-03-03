@@ -3,11 +3,13 @@ export default class MarketOrder {
   volume
   price
   time
-  constructor(orderType, volume, price, time) {
+  agentID
+  constructor(orderType, volume, price, time, agentID) {
     this.orderType = orderType
     this.volume = volume
     this.price = price
     this.time = time
+    this.agentID = agentID
   }
 
   ToString() {

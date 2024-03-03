@@ -1,12 +1,14 @@
 import {pow, max} from "mathjs"
-import MarketOrder, {OrderType} from '../MarketOrder.js'
-
 import * as tf from '@tensorflow/tfjs'
+import MarketOrder, {OrderType} from '../../MarketOrder.js'
+import Agent from "../Agent.js"
 
-export default class RLAgent {
+export default class RLAgent extends Agent {
   model
   lastOrder
-  constructor(startingPrice) {
+  constructor(agnetID, startingCaptial, startingVolumeHeld, startingPrice) {
+    super(agnetID, startingCaptial, startingVolumeHeld, true)
+
     this.model = tf.sequential({
       layers: [
         // tf.layers.input({shape: [5,1], }),
@@ -35,7 +37,10 @@ export default class RLAgent {
       price: price,
       orderType: orderType
     }
-    return new MarketOrder(orderType, 1, price, time)
+    if (orderType === OrderType.BUY &&this.capital < price) {
+      return
+    }
+    return new MarketOrder(orderType, 1, price, time, this.agentID)
   }
 
   async Learn(moment) {
