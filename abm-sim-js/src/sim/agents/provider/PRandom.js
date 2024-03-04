@@ -1,8 +1,13 @@
 import {max} from "mathjs"
 import jstat from "jstat"
 import MarketOrder, {OrderType} from '../../MarketOrder.js'
+import Agent from "../Agent.js"
 
-export default class PRandom {
+export default class PRandom extends Agent {
+  constructor(agnetID, startingCaptial, startingVolumeHeld) {
+    super(agnetID, startingCaptial, startingVolumeHeld, false)
+  }
+
   Action(moment, time) {
     let orderType
     let price
@@ -13,7 +18,7 @@ export default class PRandom {
       orderType = OrderType.SELL
       price = calculatePrice(false, moment)
     }
-    return new MarketOrder(orderType, 1, price, time)
+    return new MarketOrder(orderType, 1, price, time, this.agentID)
   }
 }
 

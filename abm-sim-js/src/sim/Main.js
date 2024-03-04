@@ -2,7 +2,7 @@ import Moment from './Moment.js'
 import MarketOrder, { OrderType } from "./MarketOrder.js";
 
 import PFRandom from "./agents/provider/PFRandom.js"
-// import PRandom from './agents/provider/PRandom.js';
+import PRandom from './agents/provider/PRandom.js';
 import RLAgent from './agents/taker/RLAgent.js';
 
 
@@ -21,11 +21,11 @@ function SimSettingsFactory(settings) {
       result.agentSet[numAgents] = new PFRandom(numAgents++, settings.startingCapital, settings.startingVolume, settings.FPFPrice)
     })
   }
-  // if (settings.checked[2]) {
-  //   Array(settings.amounts[2]).keys().forEach(() => {
-  //     result.agents.push(new PRandom(settings.FPFPrice))
-  //   })
-  // }
+  if (settings.checked[2]) {
+    Array(settings.amounts[2]).keys().forEach(() => {
+      result.agentSet[numAgents] = new PRandom(numAgents++, settings.startingCapital, settings.startingVolume)
+    })
+  }
   return result
 }
 
@@ -34,6 +34,7 @@ export default function StartSim(orderBook, settings) {
   // const RLAgents = simSettings.RLAgents
   // const agents = simSettings.agents
   const agentSet = simSettings.agentSet
+  console.log(agentSet);
 
   const time = {current:0}
 
